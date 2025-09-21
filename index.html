@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>狂野乐都</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;font-family:Arial,Helvetica,sans-serif}
+  /* 容器：移动优先，满屏显示 */
+  .carousel{position:relative;width:100%;height:100vh;max-width:900px;margin:0 auto;overflow:hidden;background:#000}
+  /* 横向排列幻灯片 */
+  .slides{display:flex;height:100%;transition:transform 0.5s ease}
+  .slide{flex:0 0 100%;height:100%;position:relative}
+  .slide img{width:100%;height:100%;object-fit:cover;display:block}
+  /* 按钮 */
+  .controls{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);display:flex;justify-content:space-between;padding:0 10px;pointer-events:none}
+  button.prev,button.next{pointer-events:auto;background:rgba(0,0,0,0.35);border:0;color:#fff;font-size:28px;padding:8px 12px;border-radius:6px;cursor:pointer}
+  /* 小圆点 */
+  .dots{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:8px}
+  .dots button{width:10px;height:10px;border-radius:50%;border:0;background:rgba(255,255,255,0.5);cursor:pointer}
+  .dots button.active{background:#fff}
+</style>
+</head>
+<body>
+  <div class="carousel" id="carousel">
+    <div class="slides">
+      <div class="slide"><img src="images/1.jpg" alt="1"></div>
+      <div class="slide"><img src="images/2.jpg" alt="2"></div>
+      <div class="slide"><img src="images/3.jpg" alt="3"></div>
+      <div class="slide"><img src="images/4.jpg" alt="4"></div>
+      <div class="slide"><img src="images/5.jpg" alt="5"></div>
+      <div class="slide"><img src="images/6.jpg" alt="6"></div>
+    </div>
+
+    <div class="controls">
+      <button class="prev" aria-label="上一张">‹</button>
+      <button class="next" aria-label="下一张">›</button>
+    </div>
+
+    <div class="dots" id="dots"></div>
+  </div>
+
+<script>
+(function(){
+  const slidesWrap = document.querySelector('.slides');
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const dotsContainer = document.getElementById('dots');
+  const prevBtn = document.querySelector('.prev');
+  const nextBtn = document.querySelector('.next');
+  let index = 0;
+  let timer = null;
+  const interval = 3000; // 自动播放间隔（毫秒）
+
+  // 动态创建小点
+  for(let i=0;i<total;i++){
+    const btn = document.createElement('button');
+    if(i===0) btn.classList.add('active');
+    btn.addEventListener('click',()=>{ goTo(i); resetAuto(); });
+    dotsContainer.appendChild(btn);
+  }
+  const dots = dotsContainer.querySelectorAll('button');
+
+  function updateDots(){
+    dots.forEach((d,i)=> d.classList.toggle('active', i===index));
+  }
+
+  function goTo(i){
+    index = (i + total) % total;
+    slidesWrap.style.transform = `translateX(${-index * 100}%)`;
+    updateDots();
+  }
+  function next(){ goTo(index+1); }
+  function prev(){ goTo(index-1); }
+
+  nextBtn.addEventListener('click',()=>{ next(); resetAuto(); });
+  prevBtn.addEventListener('click',()=>{ prev(); resetAuto(); });
+
+  // 支持手指滑动（移动端）
+  let startX = 0, deltaX = 0;
+  const swipeThreshold = 40;
+  const carousel = document.getElementById('carousel');
+  carousel.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    deltaX = 0;
+    stopAuto();
+  }, {passive:true});
+  carousel.addEventListener('touchmove', e => {
+    deltaX = e.touches[0].clientX - startX;
+  }, {passive:true});
+  carousel.addEventListener('touchend', e => {
+    if(Math.abs(deltaX) > swipeThreshold){
+      if(deltaX > 0) prev(); else next();
+    }
+    startAuto();
+  });
+
+  // 自动播放控制
+  function startAuto(){ stopAuto(); timer = setInterval(next, interval); }
+  function stopAuto(){ if(timer){ clearInterval(timer); timer = null; } }
+  function resetAuto(){ stopAuto(); startAuto(); }
+
+  // 页面切换时暂停，节省资源
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden) stopAuto(); else startAuto();
+  });
+
+  // 启动
+  startAuto();
+})();
+</script>
+</body>
+</html>
